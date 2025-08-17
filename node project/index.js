@@ -43,12 +43,54 @@ publisher.on('connect', () => {
 app.get('/', (req, res) => {
   res.sendFile(join(__dirname, 'index.html'));
 });
+// Add middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.post('/send-to-laravel', async (req, res) => {
+    try {
+        // const { message, type = 'notification' } = req.body;
+        const message = req.body.message;
+
+        if (!message) {
+            return res.status(400).json({ error: 'Message is required' });
+        }
+
+        const data = {
+            source: 'NODEJS',
+            message,
+      timestamp: new Date().toISOString()
+    };
+
+    await publisher.publish('laravel-events', JSON.stringify(data));
+
+    io.emit('laravel-message', {
+        source: 'NODEJS',
+        data: data,
+        timestamp: new Date().toISOString()
+    });
+
+    res.json({
+      success: true,
+      message: 'Message sent to Laravel and Socket.IO clients',
+      data
+    });
+} catch (error) {
+    console.error('Error sending message:', error);
+    res.status(500).json({ error: 'Failed to send message' });
+}
+});
+
+
+
+
 
 subscriber.subscribe('laravel-events', (message) => {
-  
-  
+
+
   try {
     const parsedMessage = JSON.parse(message);
+    // console.log(parsedMessage);
     if (parsedMessage.user_id === 'NODEJS') {
       if (parsedMessage.fromBrowser) {
         const messageText = parsedMessage.message;
@@ -57,30 +99,36 @@ subscriber.subscribe('laravel-events', (message) => {
       }
             return;
     }
-    
+
     let displayMessage = '';
-    
+
     if (parsedMessage && parsedMessage.data && parsedMessage.data.message) {
       const sender = parsedMessage.data.sender || 'Unknown';
       const messageText = parsedMessage.data.message;
       displayMessage = `[${sender}] ${messageText}`;
-    } 
+    }
     else if (parsedMessage && parsedMessage.message) {
-      const sender = 'LARAVEL'; 
+      let sender = 'LARAVEL';
+      if(parsedMessage.source != null){
+         sender = parsedMessage.source;
+      }
+      else{
+         sender = 'LARAVEL';
+      }
       const messageText = parsedMessage.message;
       const messageKey = `${parsedMessage.user_id}-${messageText}-${parsedMessage.timestamp}`;
       if (lastMessage === messageKey) {
         return;
       }
       lastMessage = messageKey;
-      
-      displayMessage = `[${sender}] ${messageText}`;
-    } 
 
-    
+      displayMessage = `[${sender}] ${messageText}`;
+    }
+
+
     console.log( displayMessage);
     io.emit('chat message', displayMessage);
-    
+
   } catch (error) {
     console.error('Error parsing message:', error);
     console.log('Message is not valid JSON, treating as plain text');
@@ -95,12 +143,13 @@ io.on('connection', (socket) => {
       event: 'chat',
       source: 'NODEJS',
       message: msg,
-      user_id: 'NODEJS', 
+      user_id: 'NODEJS',
       timestamp: new Date().toISOString(),
-      fromBrowser: true  
+      fromBrowser: true
     }));
   });
 });
+
 
 server.listen(3000, () => {
   console.log('listening on *:3000');

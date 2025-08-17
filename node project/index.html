@@ -1,114 +1,142 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>Socket.IO chat</title>
-    <style>
-      body {
-        margin: 0;
-        padding-bottom: 3rem;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+<head>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Socket.IO chat</title>
+  <style>
+    body {
+      margin: 0;
+      padding-bottom: 3rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    #form {
+      background: rgba(0, 0, 0, 0.15);
+      padding: 0.25rem;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      height: 3rem;
+      box-sizing: border-box;
+      backdrop-filter: blur(10px);
+    }
+
+    #input {
+      border: none;
+      padding: 0 1rem;
+      flex-grow: 1;
+      border-radius: 2rem;
+      margin: 0.25rem;
+    }
+
+    #input:focus {
+      outline: none;
+    }
+
+    #form>button {
+      background: #333;
+      border: none;
+      padding: 0 1rem;
+      margin: 0.25rem;
+      border-radius: 3px;
+      outline: none;
+      color: #fff;
+    }
+
+    #messages {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    #messages>li {
+      padding: 0.5rem 1rem;
+      margin: 0.25rem;
+      max-width: 70%;
+      border-radius: 10px;
+      clear: both;
+    }
+
+    /* My message (right side) */
+    .my-message {
+      background: #007bff;
+      color: white;
+      float: right;
+      text-align: right;
+    }
+
+    /* Received message (left side) */
+    .other-message {
+      background: #efefef;
+      color: black;
+      float: left;
+      text-align: left;
+    }
+  </style>
+</head>
+
+<body>
+  <ul id="messages"></ul>
+  <form id="form" action="">
+    <input id="input" autocomplete="off" /><button>Send</button>
+  </form>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
+    const messages = document.getElementById('messages');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (input.value) {
+        appendMessage(`[ME] ${input.value}`, 'my-message');
+
+        socket.emit('chat message', input.value);
+        input.value = '';
       }
+    });
 
-      #form {
-        background: rgba(0, 0, 0, 0.15);
-        padding: 0.25rem;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        display: flex;
-        height: 3rem;
-        box-sizing: border-box;
-        backdrop-filter: blur(10px);
+    // socket.on('chat message', (msg) => {
+    //   if (msg.includes('[') && msg.includes(']')) {
+    //     // Check if the message is from Node.js and change it to [ME]
+    //     if (msg.startsWith('[NODEJS]')) {
+    //       const messageText = msg.replace('[NODEJS]', '[ME]');
+    //       appendMessage(messageText, 'my-message');
+    //     } else {
+    //       appendMessage(msg, 'other-message');
+    //     }
+    //   } else {
+    //     appendMessage(`[Unknown] ${msg}`, 'other-message');
+    //   }
+    // });
+    socket.on('chat message', (msg) => {
+      console.log(msg);
+      console.log(msg.startsWith('[NODEJS]'));
+           if (msg.startsWith('[NODEJS]')) {
+          const messageText = msg.replace('[NODEJS]', '[ME]');
+          appendMessage(messageText, 'my-message');
+        } 
+     else if (msg.includes('[') && msg.includes(']')) {
+        appendMessage(msg, 'other-message');
+      } else {
+        appendMessage(`[Unknown] ${msg}`, 'other-message');
       }
-      #input {
-        border: none;
-        padding: 0 1rem;
-        flex-grow: 1;
-        border-radius: 2rem;
-        margin: 0.25rem;
-      }
-      #input:focus { outline: none; }
-      #form > button {
-        background: #333;
-        border: none;
-        padding: 0 1rem;
-        margin: 0.25rem;
-        border-radius: 3px;
-        outline: none;
-        color: #fff;
-      }
+    });
 
-      #messages {
-        list-style-type: none;
-        margin: 0;
-        padding: 0;
-      }
-      #messages > li {
-        padding: 0.5rem 1rem;
-        margin: 0.25rem;
-        max-width: 70%;
-        border-radius: 10px;
-        clear: both;
-      }
+    function appendMessage(msg, className) {
+      const item = document.createElement('li');
+      item.textContent = msg;
+      item.classList.add(className);
+      messages.appendChild(item);
+      messages.scrollTop = messages.scrollHeight;
+    }
+  </script>
+</body>
 
-      /* My message (right side) */
-      .my-message {
-        background: #007bff;
-        color: white;
-        float: right;
-        text-align: right;
-      }
-
-      /* Received message (left side) */
-      .other-message {
-        background: #efefef;
-        color: black;
-        float: left;
-        text-align: left;
-      }
-    </style>
-  </head>
-  <body>
-    <ul id="messages"></ul>
-    <form id="form" action="">
-      <input id="input" autocomplete="off" /><button>Send</button>
-    </form>
-
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-      const socket = io();
-
-      const form = document.getElementById('form');
-      const input = document.getElementById('input');
-      const messages = document.getElementById('messages');
-
-      form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        if (input.value) {
-          appendMessage(`[ME] ${input.value}`, 'my-message');
-
-          socket.emit('chat message', input.value);
-          input.value = '';
-        }
-      });
-
-      socket.on('chat message', (msg) => {
-        if (msg.includes('[') && msg.includes(']')) {
-          appendMessage(msg, 'other-message');
-        } else {
-          appendMessage(`[Unknown] ${msg}`, 'other-message');
-        }
-      });
-
-      function appendMessage(msg, className) {
-        const item = document.createElement('li');
-        item.textContent = msg;
-        item.classList.add(className);
-        messages.appendChild(item);
-        messages.scrollTop = messages.scrollHeight;
-      }
-    </script>
-  </body>
 </html>

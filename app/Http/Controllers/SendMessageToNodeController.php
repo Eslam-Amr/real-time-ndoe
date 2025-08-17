@@ -19,7 +19,7 @@ class SendMessageToNodeController extends Controller
         $message = Message::create(
             [
                 'message' => $request->input('message', 'welcome'),
-                'source' => 'laravel',
+                'source' => 'LARAVEL',
             ]
         );
 
