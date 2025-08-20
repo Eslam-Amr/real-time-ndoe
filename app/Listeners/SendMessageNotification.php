@@ -26,9 +26,9 @@ class SendMessageNotification implements ShouldQueue
      */
     public function handle(MessageSent $event): void
     {
-        Log::info('Sending message notification');
-        // Send notification through custom Redis channel
-        Notification::route('redis', 'laravel-events')
-            ->notify(new MessageNotification($event->message, $event->channel));
+        // Log::info('Sending message notification');
+        // // Send notification through custom Redis channel
+        // Notification::route('redis', 'laravel-events')
+        //     ->notify(new MessageNotification($event->message, $event->channel));
     }
 }

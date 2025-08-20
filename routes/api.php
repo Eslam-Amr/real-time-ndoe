@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Payment\PaymentController;
 use App\Http\Controllers\SendMessageToNodeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redis;
@@ -18,18 +19,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
-});
-
-// API route for polling messages (fallback when WebSockets are not available)
-Route::get('/messages/latest', function () {
-    // This is a simple fallback - in a real app you might store messages in database
-    return response()->json([
-        [
-            'message' => 'Polling fallback message',
-            'timestamp' => now()->toISOString(),
-            'user_id' => 'system'
-        ]
-    ]);
 });
 
 
@@ -75,3 +64,19 @@ Route::get('/messages/latest', function () {
 //     return response()->json($payload);
 // });
 Route::post('/send-to-node', SendMessageToNodeController::class);
+
+
+
+
+
+
+
+
+
+
+Route::post('/payment/process/V2', [PaymentController::class, 'paymentProcessV2']);
+Route::match(['GET','POST'],'/payment/callback/V2', [PaymentController::class, 'callBackV2']);
+
+
+Route::post('/payment/process', [PaymentController::class, 'paymentProcess']);
+Route::match(['GET','POST'],'/payment/callback', [PaymentController::class, 'callBack']);

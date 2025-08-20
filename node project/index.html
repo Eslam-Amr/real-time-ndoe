@@ -98,7 +98,7 @@
         appendMessage(`[ME] ${input.value}`, 'my-message');
 
         socket.emit('chat message', input.value);
-        input.value = '';
+        input.value = ' ';
       }
     });
 
@@ -121,7 +121,7 @@
            if (msg.startsWith('[NODEJS]')) {
           const messageText = msg.replace('[NODEJS]', '[ME]');
           appendMessage(messageText, 'my-message');
-        } 
+        }
      else if (msg.includes('[') && msg.includes(']')) {
         appendMessage(msg, 'other-message');
       } else {

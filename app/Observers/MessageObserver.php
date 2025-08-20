@@ -19,7 +19,9 @@ class MessageObserver
     // });
         // event(new MessageSent($message));
           if ($message->source == 'LARAVEL') {
-        broadcast(new MessageSent($message));
+        // broadcast(new MessageSent($message));
+        // dispatch(new MessageSent($message));
+        MessageSent::dispatch($message);
     }
         // event(new MessageSent($message, 'laravel-events'));
 
